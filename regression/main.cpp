@@ -85,6 +85,10 @@ void main(int argc, char *argv[]) {
 	std::vector<double> shape;
 	read_vector(shape, input_info.dir_shape + "mat.raw");
 
+	// テスト症例形状主成分スコア
+	std::vector<double> test;
+	read_vector(test, input_info.dir_test + "mat.raw");
+
 	//変形場主成分スコア
 	std::vector<double> deformation;
 	read_vector(deformation, input_info.dir_def + "mat.raw");
@@ -93,36 +97,63 @@ void main(int argc, char *argv[]) {
 	Eigen::MatrixXd Shape_read = Eigen::Map<Eigen::MatrixXd>(&shape[0], input_info.p, input_info.n);
 	Eigen::MatrixXd Deformation_read = Eigen::Map<Eigen::MatrixXd>(&deformation[0], input_info.p, input_info.n);
 	Eigen::MatrixXd Deformation = Deformation_read.transpose();
-	
+	Eigen::MatrixXd Test_read = Eigen::Map<Eigen::MatrixXd>(&test[0], input_info.p, input_info.n+1);
 	//一番左の列に１をいれる
 	Eigen::MatrixXd Shape = Shape.Ones(input_info.n, input_info.p + 1);
 	Shape.block(0, 1, input_info.n, input_info.p) = Shape_read.transpose();
+	//テストデータ一番左に１をいれる
+	Eigen::MatrixXd Test = Test.Ones(input_info.n+1, input_info.p + 1);
+	Test.block(0, 1, input_info.n+1, input_info.p) = Test_read.transpose();
 
+	std::cout << "shape"<<std::endl<<Shape << std::endl;
+	std::cout << "def" << std::endl << Deformation << std::endl;
+	std::ofstream mat_Reg(input_info.dir_out + "result.csv");
+	Eigen::MatrixXd Result;
+	Result = Result.Zero(input_info.p, 1);
 
-	std::ofstream mat_def(input_info.dir_out + "deformation.csv");
 	for (int a = 0; a < input_info.p; a++) {
-		for (int i = 0; i < Deformation.block(0, a, input_info.n, 1).rows(); i++) {
+		/*for (int i = 0; i < Deformation.block(0, a, input_info.n, 1).rows(); i++) {
 			for (int j = 0; j < Deformation.block(0, a, input_info.n, 1).cols(); j++) {
 
 				mat_def << Deformation.block(0, a, input_info.n, 1)(i, j) << ",";
 			}
 			mat_def << std::endl;
-		}
+		}*/
 
 		//係数を算出
 		Eigen::MatrixXd beta_0 = Deformation.block(0, a, input_info.n, 1);
 		Eigen::MatrixXd beta_1 = Shape.transpose()*Shape;
 		Eigen::MatrixXd beta = beta_1.inverse()*Shape.transpose()*beta_0;
+
+		//回帰モデルから算出したスコア
+		Eigen::MatrixXd reg_0 = Test*beta;
+		Eigen::MatrixXd reg = reg_0.block(input_info.n_num, 0, 1, 1);
+		std::cout << "(^^)" << std::endl;
+		Result.block(a,0,1,1)=reg;
+		std::cout << "(^^)" << std::endl;
+		std::cout << Result << std::endl;
+		
 		std::stringstream dirOUT;
 		dirOUT << input_info.dir_out << a << "beta";
 		write_matrix_raw_and_txt(beta, dirOUT.str());
 		std::ofstream mat_beta(dirOUT.str()+".csv");
 
+
 		for (int i = 0; i < beta.rows(); i++) {
 
 			mat_beta << beta(i, 0) << std::endl;
 		}
+		
+		
+		
 	}
-	
+
+	std::stringstream dirOUT_reg;
+	dirOUT_reg << input_info.dir_out <<  "test";
+	write_matrix_raw_and_txt(Result, dirOUT_reg.str());
+	std::ofstream mat_reg(dirOUT_reg.str() + ".csv");
+	for (int i = 0; i < Result.rows(); i++) {
+		mat_Reg << Result(i, 0) << std::endl;
+	}
 
 }
