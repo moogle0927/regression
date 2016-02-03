@@ -100,27 +100,29 @@ void main(int argc, char *argv[]) {
 
 
 	std::ofstream mat_def(input_info.dir_out + "deformation.csv");
+	for (int a = 0; a < input_info.p; a++) {
+		for (int i = 0; i < Deformation.block(0, a, input_info.n, 1).rows(); i++) {
+			for (int j = 0; j < Deformation.block(0, a, input_info.n, 1).cols(); j++) {
 
-	for (int i = 0; i < Deformation.block(0, input_info.num_p - 1, input_info.n, 1).rows(); i++) {
-		for (int j = 0; j < Deformation.block(0, input_info.num_p - 1, input_info.n, 1).cols(); j++) {
-
-			mat_def << Deformation.block(0, input_info.num_p - 1, input_info.n, 1)(i, j) << ",";
+				mat_def << Deformation.block(0, a, input_info.n, 1)(i, j) << ",";
+			}
+			mat_def << std::endl;
 		}
-		mat_def  << std::endl;
+
+		//ŒW”‚ðŽZo
+		Eigen::MatrixXd beta_0 = Deformation.block(0, a, input_info.n, 1);
+		Eigen::MatrixXd beta_1 = Shape.transpose()*Shape;
+		Eigen::MatrixXd beta = beta_1.inverse()*Shape.transpose()*beta_0;
+		std::stringstream dirOUT;
+		dirOUT << input_info.dir_out << a << "beta";
+		write_matrix_raw_and_txt(beta, dirOUT.str());
+		std::ofstream mat_beta(dirOUT.str()+".csv");
+
+		for (int i = 0; i < beta.rows(); i++) {
+
+			mat_beta << beta(i, 0) << std::endl;
+		}
 	}
-
-	//ŒW”‚ðŽZo
-	Eigen::MatrixXd beta_0 = Deformation.block(0, input_info.num_p - 1, input_info.n, 1);
-	Eigen::MatrixXd beta_1 = Shape.transpose()*Shape;
-	Eigen::MatrixXd beta = beta_1.inverse()*Shape.transpose()*beta_0;
-
 	
-	write_matrix_raw_and_txt(beta, input_info.dir_out+"beta");
-	std::ofstream mat_beta(input_info.dir_out + "beta.csv");
-
-	for (int i = 0; i < beta.rows(); i++) {
-
-		mat_beta << beta(i, 0) << std::endl;
-	}
 
 }
