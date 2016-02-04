@@ -18,11 +18,12 @@ struct info
 	std::string dir_def;
 	std::string dir_out;
 	std::string dir_test;
+	std::string dir_s;
+	std::string dir_d;
 	
 	int n; //症例数
 	int p; //軸数
-	int s; //軸数
-	int d; //軸数
+
 	int n_num;
 	//int num_p; //見たい主成分スコアの軸番号
 
@@ -37,8 +38,9 @@ struct info
 
 		n = info.get_as_int("n_case");
 		p = info.get_as_int("P"); 
-		s = info.get_as_int("S"); //説明変数の数
-		d = info.get_as_int("D"); //目的変数の数
+		dir_s = info.get_as_str("S"); //説明変数の数
+		dir_d = info.get_as_str("D"); //目的変数の数
+
 		n_num = info.get_as_int("n_num")-1;
 		//num_p = info.get_as_int("P_num");
 
