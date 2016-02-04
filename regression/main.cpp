@@ -94,24 +94,27 @@ void main(int argc, char *argv[]) {
 	read_vector(deformation, input_info.dir_def + "mat.raw");
 
 	//読み込んだデータで行列を作る
-	Eigen::MatrixXd Shape_read = Eigen::Map<Eigen::MatrixXd>(&shape[0], input_info.p, input_info.n);
-	Eigen::MatrixXd Deformation_read = Eigen::Map<Eigen::MatrixXd>(&deformation[0], input_info.p, input_info.n);
+	Eigen::MatrixXd Shape_read_0 = Eigen::Map<Eigen::MatrixXd>(&shape[0], input_info.p, input_info.n);
+	Eigen::MatrixXd Shape_read = Shape_read_0.block(0,0,input_info.s,input_info.n);
+	Eigen::MatrixXd Deformation_read_0 = Eigen::Map<Eigen::MatrixXd>(&deformation[0], input_info.p, input_info.n);
+	Eigen::MatrixXd Deformation_read = Deformation_read_0.block(0, 0, input_info.d, input_info.n);
 	Eigen::MatrixXd Deformation = Deformation_read.transpose();
-	Eigen::MatrixXd Test_read = Eigen::Map<Eigen::MatrixXd>(&test[0], input_info.p, input_info.n+1);
+	Eigen::MatrixXd Test_read_0 = Eigen::Map<Eigen::MatrixXd>(&test[0], input_info.p, input_info.n+1);
+	Eigen::MatrixXd Test_read = Test_read_0.block(0,0, input_info.s, input_info.n + 1);
 	//一番左の列に１をいれる
-	Eigen::MatrixXd Shape = Shape.Ones(input_info.n, input_info.p + 1);
-	Shape.block(0, 1, input_info.n, input_info.p) = Shape_read.transpose();
+	Eigen::MatrixXd Shape = Shape.Ones(input_info.n, input_info.s + 1);
+	Shape.block(0, 1, input_info.n, input_info.s) = Shape_read.transpose();
 	//テストデータ一番左に１をいれる
-	Eigen::MatrixXd Test = Test.Ones(input_info.n+1, input_info.p + 1);
-	Test.block(0, 1, input_info.n+1, input_info.p) = Test_read.transpose();
+	Eigen::MatrixXd Test = Test.Ones(input_info.n+1, input_info.s + 1);
+	Test.block(0, 1, input_info.n+1, input_info.s) = Test_read.transpose();
 
 	std::cout << "shape"<<std::endl<<Shape << std::endl;
 	std::cout << "def" << std::endl << Deformation << std::endl;
 	std::ofstream mat_Reg(input_info.dir_out + "result.csv");
 	Eigen::MatrixXd Result;
-	Result = Result.Zero(input_info.p, 1);
+	Result = Result.Zero(input_info.d, 1);
 
-	for (int a = 0; a < input_info.p; a++) {
+	for (int a = 0; a < input_info.d; a++) {
 		/*for (int i = 0; i < Deformation.block(0, a, input_info.n, 1).rows(); i++) {
 			for (int j = 0; j < Deformation.block(0, a, input_info.n, 1).cols(); j++) {
 
