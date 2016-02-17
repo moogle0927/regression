@@ -114,6 +114,11 @@ void main(int argc, char *argv[]) {
 	std::vector<double> deformation;
 	read_vector(deformation, input_info.dir_def + "mat.raw");
 
+	//変形場主成分スコア
+	std::vector<double> deftest;
+	read_vector(deftest, input_info.dir_deftest + "mat.raw");
+
+
 	//入力した軸の数でループ
 	for (int j = 0; j < s.size(); j++) {
 		for (int k = 0; k < d.size(); k++) {
@@ -126,6 +131,8 @@ void main(int argc, char *argv[]) {
 			Eigen::MatrixXd Deformation = Deformation_read.transpose();
 			Eigen::MatrixXd Test_read_0 = Eigen::Map<Eigen::MatrixXd>(&test[0], input_info.p, input_info.n + 1);
 			Eigen::MatrixXd Test_read = Test_read_0.block(0, 0, s[j], input_info.n + 1);
+			Eigen::MatrixXd dTest_read_0 = Eigen::Map<Eigen::MatrixXd>(&deftest[0], input_info.p, input_info.n + 1);
+			Eigen::MatrixXd dTest = dTest_read_0.block(0, 0, d[k], input_info.n + 1);
 			//一番左の列に１をいれる
 			Eigen::MatrixXd Shape = Shape.Ones(input_info.n, s[j] + 1);
 			Shape.block(0, 1, input_info.n, s[j]) = Shape_read.transpose();
@@ -140,6 +147,8 @@ void main(int argc, char *argv[]) {
 			std::ofstream mat_Reg(dir_Reg.str());
 			Eigen::MatrixXd Result;
 			Result = Result.Zero(d[k], 1);
+			Eigen::MatrixXd Dif;
+			Dif = Dif.Zero(d[k], input_info.n + 1);
 
 			for (int a = 0; a < d[k]; a++) {
 				/*for (int i = 0; i < Deformation.block(0, a, input_info.n, 1).rows(); i++) {
@@ -158,8 +167,10 @@ void main(int argc, char *argv[]) {
 				//回帰モデルから算出したスコア
 				Eigen::MatrixXd reg_0 = Test*beta;
 				Eigen::MatrixXd reg = reg_0.block(input_info.n_num, 0, 1, 1);
+				Eigen::MatrixXd dif = reg_0.transpose();
 				std::cout << "(^^)" << std::endl;
 				Result.block(a, 0, 1, 1) = reg;
+				Dif.block(a, 0, 1, input_info.n + 1) = dif;
 				std::cout << "(^^)" << std::endl;
 				std::cout << Result << std::endl;
 
@@ -186,6 +197,22 @@ void main(int argc, char *argv[]) {
 			std::ofstream mat_reg(dirOUT_reg.str() + ".csv");
 			for (int i = 0; i < Result.rows(); i++) {
 				mat_Reg << Result(i, 0) << std::endl;
+			}
+
+			std::stringstream dirOUT_dif;
+			dirOUT_dif << input_info.dir_out << "D" << d[k] << "S" << s[j] << "/" << "dif";
+			nari::system::make_directry(dirOUT_dif.str());
+			write_matrix_raw_and_txt(Dif, dirOUT_dif.str());
+			std::ofstream mat_dif(dirOUT_dif.str() + ".csv");
+			Eigen::MatrixXd diff = Dif - dTest;
+			Eigen::MatrixXd diff_2 = diff_2.Zero(d[k], input_info.n + 1);
+			
+			for (int i = 0; i < Dif.rows(); i++) {
+				for (int j = 0; j < Dif.cols(); j++) {
+					Eigen::MatrixXd aaaa = diff.block(i, j, 1, 1)*diff.block(i, j, 1, 1);
+					mat_dif << aaaa << ",";
+				}
+				mat_dif << std::endl;
 			}
 		}
 	}

@@ -18,6 +18,7 @@ struct info
 	std::string dir_def;
 	std::string dir_out;
 	std::string dir_test;
+	std::string dir_deftest;
 	std::string dir_s;
 	std::string dir_d;
 	
@@ -35,6 +36,7 @@ struct info
 		dir_def = nari::file::add_delim(info.get_as_str("dir_def"));
 		dir_out = nari::file::add_delim(info.get_as_str("dir_out"));
 		dir_test = nari::file::add_delim(info.get_as_str("dir_shape")+"test/");
+		dir_deftest = nari::file::add_delim(info.get_as_str("dir_def") + "test/");
 
 		n = info.get_as_int("n_case");
 		p = info.get_as_int("P"); 
